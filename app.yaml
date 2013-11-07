@@ -1,0 +1,112 @@
+application: gae-mixy
+version: alpha
+runtime: python27
+api_version: 1
+threadsafe: false
+
+
+builtins:
+- appstats: on
+- deferred: on
+- remote_api: on
+
+
+libraries:
+- name: PIL
+  version: "1.1.7"
+- name: jinja2
+  version: "2.6"
+- name: webapp2
+  version: "2.5.2"
+- name: lxml
+  version: "2.3"
+
+
+inbound_services:
+- channel_presence
+- warmup
+
+
+handlers:
+- url: /css
+  static_dir: static/css
+
+# Host CSS files in a versioned directory to force client updates.
+- url: /(\w+)/css/(.*)
+  static_files: static/css/\2
+  upload: static/css/(.*)
+
+- url: /js
+  static_dir: static/js
+
+# Host JS files in a versioned directory to force client updates.
+- url: /(\w+)/js/(.*)
+  static_files: static/js/\2
+  upload: static/js/(.*)
+
+- url: /fonts
+  static_dir: static/fonts
+
+- url: /favicon\.ico
+  static_files: static/img/favicon.ico
+  upload: static/img/favicon.ico
+
+- url: /robots.txt
+  static_files: static/robots.txt
+  upload: static/robots.txt
+
+- url: /img
+  static_dir: static/img
+
+# Host image files in a versioned directory to force client updates.
+- url: /(\w+)/img/(.*)
+  static_files: static/img/\2
+  upload: static/img/(.*)
+
+- url: /_ereporter.*
+  script: $PYTHON_LIB/google/appengine/ext/ereporter/report_generator.py
+  login: admin
+
+- url: /gae_admin.*
+  script: google.appengine.ext.admin.application
+  login: admin
+
+- url: /admin.*
+  script: urls.app
+  login: admin
+
+- url: /.*
+  script: urls.app
+
+
+error_handlers:
+- file: static/html/default_error.html
+
+- error_code: over_quota
+  file: static/html/over_quota.html
+
+- error_code: dos_api_denial
+  file: static/html/dos_api_denial.html
+
+- error_code: timeout
+  file: static/html/timeout.html
+
+
+skip_files:
+- ^(.*/)?app\.yaml
+- ^(.*/)?app\.yml
+- ^(.*/)?index\.yaml
+- ^(.*/)?index\.yml
+- ^(.*/)?#.*#
+- ^(.*/)?.*~
+- ^(.*/)?.*\.py[co]
+- ^(.*/)?.*/RCS/.*
+- ^(.*/)?\..*
+- ^(.*/)?.*\.bak$
+- ^(.*/)?.*\.orig$
+- ^(.*/)?.*/tests/.*
+- ^scripts/.*
+- ^(.*/)?.*/README
+- ^(.*/)?.*/README\.md
+- ^run_tests\.py
+- ^requirements\.txt

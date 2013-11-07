@@ -1,0 +1,5 @@
+cron:
+# Edit and uncomment the following to have App Engine email you exceptions.
+#- description: Hourly error report for your app.
+#  url: /_ereporter?sender=BOT@YOURDOMAIN.com&to=YOU@YOURDOMAIN.com
+#  schedule: every 1 hour synchronized
