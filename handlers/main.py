@@ -13,9 +13,9 @@ from google.appengine.ext import deferred
 from google.appengine.ext import ndb
 from google.appengine.ext.ndb import blobstore
 
+import mixins
 import models
 from . import base
-from api import mixins
 from api.handlers import errors
 from api.handlers import main
 

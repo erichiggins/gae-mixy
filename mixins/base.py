@@ -11,7 +11,7 @@ import json
 from google.appengine.ext import ndb
 
 import acl
-from ..handlers import errors
+from api.handlers import errors
 
 
 __all__ = [

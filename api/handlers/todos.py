@@ -5,7 +5,7 @@ ToDo API handlers.
 
 
 from . import base
-from .. import mixins
+import mixins
 
 
 __all__ = [
@@ -25,6 +25,6 @@ class ToDoList(base.MultiEntityHandler, mixins.ToDo):
   pass
 
 
-class ToDo(base.EntityPropertyHandler, mixins.ToDo):
+class ToDoProperty(base.EntityPropertyHandler, mixins.ToDo):
   """Handler for a single ToDo Model property."""
   pass
