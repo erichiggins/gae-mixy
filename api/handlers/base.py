@@ -64,7 +64,7 @@ class BaseHandler(webapp2.RequestHandler):
   CSRF_HEADER = 'x-mixy-csrf-token'
 
   def initialize(self, request, response):
-    super(BaseHandler, self).initialize(request, response)
+    webapp2.RequestHandler.initialize(self, request, response)
     self.session_backend = 'datastore'
 
   def verify_origin(self):
@@ -325,7 +325,7 @@ class SearchHandler(BaseHandler):
     return results
 
 
-class SingletonHandler(BaseHandler):
+class EntityHandler(BaseHandler):
 
   owner_prop = 'created_by'
   grp_prop = 'groups'
@@ -357,7 +357,7 @@ class SingletonHandler(BaseHandler):
     self.render(instance, httplib.ACCEPTED)
 
 
-class PropertyHandler(SingletonHandler):
+class EntityPropertyHandler(EntityHandler):
 
   def get(self, obj_id, prop, **kwargs):
     """Read."""
@@ -377,7 +377,7 @@ class PropertyHandler(SingletonHandler):
     raise NotImplementedError
 
 
-class ListHandler(SingletonHandler):
+class MultiEntityHandler(EntityHandler):
 
   @ndb.synctasklet
   def get(self, *args, **kwargs):
