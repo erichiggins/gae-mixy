@@ -34,7 +34,7 @@ class BaseHandler(base.BaseHandler):
         # Defaults go here.
         'account': self.account,
         'now': arrow.utcnow(),
-        'url_version_id': self.get_url_version_id(),
+        'url_version_id': base.get_url_version_id(),
         # Add redirect destination.
         'dest_url': str(self.request.get('dest_url', '')),
         # Add form errors from session, if any.
@@ -44,7 +44,7 @@ class BaseHandler(base.BaseHandler):
     if 'preload' not in resp:
       resp['preload'] = {}
     # Add version id.
-    resp['preload']['version_id'] = self.get_version_id()
+    resp['preload']['version_id'] = base.get_version_id()
     # Add a csrf_token.
     resp['preload']['csrf_token'] = self.generate_csrf_token()
     resp['preload']['account'] = {'id': getattr(self.account, 'id', None)}

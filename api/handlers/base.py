@@ -32,9 +32,9 @@ from tools import common
 
 
 __all__ = [
-    'admin_required',
-    'login_required',
-    'verify_csrf',
+    'get_application_id',
+    'get_version_id',
+    'get_url_version_id',
     'BaseHandler',
     'SearchHandler',
     'EntityHandler',
@@ -45,70 +45,23 @@ __all__ = [
 ]
 
 
-# TODO(eric): Move these to a common location to be shared by all handlers.
-def admin_required(func):
-  """Decorator used to ensure users are admins."""
+def get_application_id():
+  """Returns the app id from the app_identity service."""
+  return app_identity.get_application_id()
 
-  def wrapper(request, *args, **kwargs):
-    if not request.account:
-      raise errors.Error(httplib.UNAUTHORIZED)
-    if not request.account.admin:
-      raise errors.Error(httplib.FORBIDDEN)
-    else:
-      return func(request, *args, **kwargs)
+def get_version_id():
+  """Returns the current_version_id environment variable."""
+  return os.environ.get('CURRENT_VERSION_ID', '0')
 
-  return wrapper
-
-
-def login_required(func):
-  """Decorator used to ensure users are logged in."""
-
-  def wrapper(request, *args, **kwargs):
-    if not request.account:
-      raise errors.Error(httplib.UNAUTHORIZED)
-    else:
-      return func(request, *args, **kwargs)
-
-  return wrapper
-
-
-def verify_csrf(func):
-  """Decorator used to verify the CSRF token header for handlers."""
-
-  def wrapper(request, *args, **kwargs):
-    csrf_token = request.request.headers.get('x-mixy-csrf-token')
-    if not request.validate_csrf_token(csrf_token):
-      raise errors.Error(httplib.FORBIDDEN)
-    else:
-      return func(request, *args, **kwargs)
-
-  return wrapper
-
-
-def verify_referrer(func):
-  """Decorator used to verify that the referrer matches the request host.
-
-  This decorator can be used to prevent abuse of RequestHandler methods.
-  """
-
-  def wrapper(request, *args, **kwargs):
-    host = request.request.host
-    referrer = request.request.headers.get('Referer')
-    if not referrer:
-      # Allow direct requests.
-      return func(request, *args, **kwargs)
-    else:
-      referrer_parts = urlparse.urlparse(referrer)
-      if host != referrer_parts.netloc:
-        raise errors.Error(httplib.FORBIDDEN)
-      return func(request, *args, **kwargs)
-
-  return wrapper
+def get_url_version_id():
+  """Returns a url-safe of the current_version_id environment variable."""
+  return common.slugify(get_version_id())
 
 
 class BaseHandler(webapp2.RequestHandler):
 
   CSRF_DELIMITER = ':'
+  CSRF_HEADER = 'x-mixy-csrf-token'
 
   def initialize(self, request, response):
     super(BaseHandler, self).initialize(request, response)
@@ -125,18 +78,6 @@ class BaseHandler(webapp2.RequestHandler):
     logging.info('server: %s, request: %s', server_host, request_referer)
     if server_host and request_referer and server_host != request_referer:
       raise errors.Error(httplib.FORBIDDEN)
-
-  def get_application_id(self):
-    """Returns the app id from the app_identity service."""
-    return app_identity.get_application_id()
-
-  def get_version_id(self):
-    """Returns the current_version_id environment variable."""
-    return os.environ.get('CURRENT_VERSION_ID', '0')
-
-  def get_url_version_id(self):
-    """Returns a url-safe of the current_version_id environment variable."""
-    return common.slugify(self.get_version_id())
 
   def dispatch(self):
     """Dispatch the request."""
@@ -306,7 +247,7 @@ class BaseHandler(webapp2.RequestHandler):
     return True
 
   def verify_csrf(self):
-    csrf_token = self.request.headers.get('x-mixy-csrf-token')
+    csrf_token = self.request.headers.get(self.CSRF_HEADER)
     if not self.validate_csrf_token(csrf_token):
       raise errors.Error(httplib.FORBIDDEN)
 
@@ -421,7 +362,6 @@ class PropertyHandler(SingletonHandler):
   def get(self, obj_id, prop, **kwargs):
     """Read."""
     instance = self.read_single(obj_id, self.account)
-    # TODO(eric): Return 410 Gone if disabled=True.
     # TODO(eric): None may indicate existing property. Consider exception.
     resp = {prop: getattr(instance, prop, None)}
     self.render(resp)
@@ -500,7 +440,7 @@ class CachedProxyHandler(BaseHandler):
     assert self.memcache_key
     raw_data = memcache.get(self.memcache_key)
     if raw_data is not None:
-      logging.info(u'Cached response found for %s', self.remote_url)
+      logging.info('Cached response found for %s', self.remote_url)
       return httplib.OK, self.parse(raw_data)
     else:
       # Fetch from remote server.
@@ -515,7 +455,7 @@ class CachedProxyHandler(BaseHandler):
       return status, self.parse(raw_data)
 
   def fetch(self, *args, **kwargs):
-    logging.info(u'Fetching remote data for %s', self.remote_url)
+    logging.info('Fetching remote data for %s', self.remote_url)
     resp = urlfetch.fetch(self.remote_url)
     json_content = json.loads(resp.content)
     return resp.status_code, json_content

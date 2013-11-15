@@ -102,6 +102,6 @@ class Version(base.BaseHandler):
 
   def get(self, *args, **kwargs):
     resp = {
-        'version': self.get_version_id(),
+        'version': base.get_version_id(),
     }
     self.render(resp)

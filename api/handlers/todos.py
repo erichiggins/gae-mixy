@@ -5,7 +5,7 @@ ToDo API handlers.
 
 
 from . import base
-from .. import mixins
+import mixins
 
 
 __all__ = [

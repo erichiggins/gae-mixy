@@ -33,7 +33,7 @@ class FormValidationError(Error):
     self.code = code or httplib.BAD_REQUEST
     self.msg = msg or httplib.responses[self.code]
     self.errors = errors or []
-    Exception.__init__(self, self.msg)
+    Error.__init__(self, self.msg)
 
   def __str__(self):
     return repr([self.code, self.msg, self.errors])
